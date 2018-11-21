@@ -12,13 +12,14 @@ and omits many desirable features." -Nielsen, M.
 
 "Although I kept a lot of the original ideas of the code untouched, there were modifications that I made.
 The purpose of these modifications were mainly to get a better understanding of the algorithm: see the
-consequence of tweaks here and there like adding regularization parameters for example. It is not my intention to get
-any credit for the presented code below given it was originally devised by Nielsen." - Damião, A.
+consequence of tweaks here and there like adding regularization parameters for example. Another thing I ended up doing
+was to not have a final nonlinear layer at the output. This meant that I had to rearrange how the backpropagation
+portion of the code worked. It is not my intention to get any credit for the presented code below given it was
+originally devised by Nielsen." - Damião, A.
 """
 
 import random
 import numpy as np
-import pandas as pd
 
 
 class Network:
@@ -81,13 +82,13 @@ class Network:
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
         for x, y in mini_batch:
-            delta_nabla_b, delta_nabla_w = self.backprop(x, y, reg_eta)
+            delta_nabla_b, delta_nabla_w = self.backpropagation(x, y, reg_eta)
             nabla_b = [nb + dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
             nabla_w = [nw + dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
         self.weights = [w - eta * nw for w, nw in zip(self.weights, nabla_w)]
         self.biases = [b - eta * nb for b, nb in zip(self.biases, nabla_b)]
 
-    def backprop(self, x, y, reg_eta):
+    def backpropagation(self, x, y, reg_eta):
         """Return a tuple ``(nabla_b, nabla_w)`` representing the gradient for the cost function C_x. ``nabla_b`` and
         ``nabla_w`` are layer-by-layer lists of numpy arrays, similar to ``self.biases`` and ``self.weights``.
         Something of extreme importance that must be noted is that np.dot becomes matrix multiplication depending
@@ -98,6 +99,7 @@ class Network:
         # Feedforward (Note that in the we will calculate the outputs prior to "entering" the activation function (z)
         #  as well as the values being output by the activation function (activation) and put them in their respective
         #  lists (zs) and (activations).)
+
         activation = x
         activations = [x]
         zs = []
@@ -110,13 +112,14 @@ class Network:
         # Backward Pass (Note that the numbering of the layers is done backwards to take advantage of the fact
         # that Python can use negative indices in lists. I have added a regularization parameter during this backward
         # pass: based on L2-norm of the parameters.)
+
         delta = zs[-1] - y
         nabla_b[-1] = delta - reg_eta*nabla_b[-1]
         nabla_w[-1] = np.dot(delta, activations[-2].transpose()) - reg_eta*nabla_w[-1]
         for idx in range(2, self.num_layers):
             z = zs[-idx]
-            sp = Network.sigmoid_prime(z)
-            delta = np.dot(self.weights[-idx+1].transpose(), delta) * sp
+            sigprime = Network.sigmoid_prime(z)
+            delta = np.dot(self.weights[-idx+1].transpose(), delta) * sigprime
             nabla_b[-idx] = delta - reg_eta*nabla_b[-idx]
             nabla_w[-idx] = np.dot(delta, activations[-idx-1].transpose()) - reg_eta*nabla_w[-idx]
 
@@ -136,7 +139,7 @@ class Network:
         y_shape = (neural_network_list[-1].sizes[-1], 1)
         prediction_point = np.zeros(y_shape)
         for idx, nn in enumerate(neural_network_list):
-            prediction_point += list_of_gammas[idx] * nn.feedforward(x_input)  # [0]
+            prediction_point += list_of_gammas[idx] * nn.feedforward(x_input)
         return prediction_point
 
     @staticmethod
@@ -145,42 +148,10 @@ class Network:
         prediction_vector = np.zeros(x_shape)
         if len(list_of_gammas) == 0:
             for idx, x in enumerate(training_x):
-                prediction_vector[idx] = neural_network_list[0].feedforward(x)  # [0]
+                prediction_vector[idx] = neural_network_list[0].feedforward(x)
             return prediction_vector
         else:
             for idx, x in enumerate(training_x):
                 for jdx, gamma in enumerate(list_of_gammas):
-                    prediction_vector[idx] += gamma * neural_network_list[jdx].feedforward(x)  # [0]
+                    prediction_vector[idx] += gamma * neural_network_list[jdx].feedforward(x)
             return prediction_vector
-
-
-class DataPreparation:
-
-    def __init__(self, filepath, x_columns):
-        self.filepath = filepath
-        self.x_columns = x_columns
-        self.training_data = DataPreparation.training_data_creation(self)
-        self.training_x, self.training_y = DataPreparation.training_xy(self)
-
-    def training_xy(self):
-        training_x, training_y = [], []
-        for x, y in self.training_data:
-            training_x.append(x)
-            training_y.append(y)
-        return training_x, training_y
-
-    def training_data_creation(self):
-
-        # Load dataset
-        dataset = pd.read_csv(self.filepath)
-        dataset = dataset.values.tolist()
-
-        # Split the columns of the file into X and Y data
-        x, y = [idx[:self.x_columns] for idx in dataset], [idy[self.x_columns:] for idy in dataset]
-
-        # Necessary manipulations to make it readable by the "Network" class
-        x, y = [[[idx] for idx in idy] for idy in x], [[[idw] for idw in idy] for idy in y]
-        x, y = np.array(x), np.array(y)
-
-        # Creation of the training data
-        return [(x, y) for x, y in zip(x, y)]
