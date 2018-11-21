@@ -1,8 +1,5 @@
-"""
-Under construction!
-"""
-
-from network import Network, DataPreparation
+from network import Network
+from data_tools import DataPreparation
 import numpy as np
 
 # # importing and manipulating dataset of interest
@@ -14,11 +11,11 @@ x_shape = (len(training_data), len(training_data[0][0]))
 y_shape = (len(training_data), len(training_data[0][1]))
 
 # # boosting parameters
-number_of_networks = 2
+number_of_networks = 5
 gammas = [1.0]
-sizes = [4, 10, 3]
-epochs = 1001
-mini_batch_size = 10
+sizes = [4, 5, 3]
+epochs = 501
+mini_batch_size = 25
 
 # # initialization of variables and creation of multiple instances of "Network" object
 training_error = training_data.copy()
@@ -50,7 +47,8 @@ for _ in range(number_of_networks):
 # x_test = np.array([[0.94], [0.26], [0.98], [0.92]])  # output should be 1
 x_test = np.array([[0.39], [0.33], [0.59], [0.51]])  # output should be 2
 print(Network.point_predictor(neural_bundle, gammas, x_test))
-for idx in range(number_of_networks):
-    print(neural_bundle[idx].feedforward(x_test))
-print()
-print('gammas: ', gammas)
+# print()
+# for idx in range(number_of_networks):
+#     print(neural_bundle[idx].feedforward(x_test))
+# print()
+# print('gammas: ', gammas)
