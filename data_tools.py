@@ -11,15 +11,15 @@ class DataPreparation:
     def __init__(self, filepath, x_columns):
         self.filepath = filepath  # filepath leading to the csv
         self.x_columns = x_columns  # in the csv file, it's the number of columns which make up the x_input
-        self.training_data = DataPreparation.training_data_creation(self)
-        self.training_x, self.training_y = DataPreparation.training_xy(self)
+        self.input_data = DataPreparation.training_data_creation(self)
+        self.input_x, self.input_y = DataPreparation.training_xy(self)
 
     def training_xy(self):
-        training_x, training_y = [], []
-        for x, y in self.training_data:
-            training_x.append(x)
-            training_y.append(y)
-        return training_x, training_y
+        input_x, input_y = [], []
+        for x, y in self.input_data:
+            input_x.append(x)
+            input_y.append(y)
+        return input_x, input_y
 
     def training_data_creation(self):
 
@@ -40,17 +40,12 @@ class DataPreparation:
 
 class MNIST:
 
-    def __init__(self,
-                 imagefile='Data Generator\\MNIST\\train-images-idx3-ubyte.gz',
-                 labelfile='Data Generator\\MNIST\\train-labels-idx1-ubyte.gz',
-                 pickle_filepath='mnist_training_data.pickle'):
+    def __init__(self, imagefile, labelfile, pickle_filepath):
 
         self.imagefile = imagefile
         self.labelfile = labelfile
         self.pickle_filepath = pickle_filepath
 
-    # This next piece of code was obtained from "Classify MNIST with PyBrain" by Martin Thoma:
-    # https://martin-thoma.com/classify-mnist-with-pybrain/
     def get_labeled_data(self):
         """Read input-vector (image) and target class (label, 0-9) and return
            it as list of tuples.

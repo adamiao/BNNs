@@ -1,45 +1,56 @@
 from network import Network
 from data_tools import DataPreparation
 import numpy as np
+from sklearn.model_selection import train_test_split
 
-# # importing and manipulating dataset of interest
+# # DATA IMPORT AND BASIC MANIPULATIONS
+
+# Importing dataset of interest
 dataset = DataPreparation('iris_onehot.csv', 4)
-training_data = dataset.training_data
-training_x, training_y = dataset.training_x, dataset.training_y
-
-x_shape = (len(training_data), len(training_data[0][0]))
+# Get data in the format: [ (x_1, y_1), (x_2, y_2), .... , (x_N, y_N) ]
+input_data = dataset.input_data
+# Training / Testing split of the dataset
+training_data, test_data = train_test_split(input_data, test_size=0.2, random_state=42)
+# Create a constant equal to the shape of the output
 y_shape = (len(training_data), len(training_data[0][1]))
 
-# # boosting parameters
+# # PARAMETERS AND VARIABLES
+
 number_of_networks = 5
-gammas = [1.0]
-sizes = [4, 5, 3]
+gammas = [1.0]  # these are the coefficients for the weak learners
+sizes = [4, 2, 3]  # architecture of the neural net: input - hidden layer 1 - ... - output
+eta = 0.01  # learning rate
+reg_eta = 0.1  # regularization parameter
 epochs = 501
 mini_batch_size = 25
 
-# # initialization of variables and creation of multiple instances of "Network" object
+# Initialization of variables
 training_error = training_data.copy()
 prediction_vector, error_vector = np.zeros(y_shape), np.zeros(y_shape)
 neural_bundle = []
 
-# # boosting procedure
-for _ in range(number_of_networks):
+# # BOOSTING PROCEDURE
+
+for iteration in range(number_of_networks):
+    print()
+    print('Training Network {} out of {}'.format(iteration + 1, number_of_networks))
+    print()
     nn = Network(sizes)
-    nn.sgd(training_error, epochs, mini_batch_size, eta=0.01, reg_eta=0.1)
+    nn.sgd(training_error, epochs, mini_batch_size, eta=eta, reg_eta=reg_eta)
     neural_bundle.append(nn)
 
-    # # calculate vector of errors
+    # Calculate error vectors
     training_error = []
     for idx, (x, y) in enumerate(training_data):
         prediction_vector = Network.point_predictor(neural_bundle, gammas, x)
         error_vector = y - prediction_vector
         training_error.append((x, y - prediction_vector))
 
-    # # calculate gamma
-    gamma = np.dot(np.transpose(error_vector), prediction_vector) / np.dot(np.transpose(prediction_vector),
-                                                                           prediction_vector)
+    # Calculate weak learner coefficient
+    gamma_numerator = np.dot(np.transpose(error_vector), prediction_vector)
+    gamma_denominator = np.dot(np.transpose(prediction_vector), prediction_vector)
+    gamma = gamma_numerator / gamma_denominator
     gammas.append(gamma[0][0])
-    # gammas.append(1.0)
 
 ########################################################################################################################
 
@@ -47,8 +58,3 @@ for _ in range(number_of_networks):
 # x_test = np.array([[0.94], [0.26], [0.98], [0.92]])  # output should be 1
 x_test = np.array([[0.39], [0.33], [0.59], [0.51]])  # output should be 2
 print(Network.point_predictor(neural_bundle, gammas, x_test))
-# print()
-# for idx in range(number_of_networks):
-#     print(neural_bundle[idx].feedforward(x_test))
-# print()
-# print('gammas: ', gammas)

@@ -14,8 +14,9 @@ and omits many desirable features." -Nielsen, M.
 The purpose of these modifications were mainly to get a better understanding of the algorithm: see the
 consequence of tweaks here and there like adding regularization parameters for example. Another thing I ended up doing
 was to not have a final nonlinear layer at the output. This meant that I had to rearrange how the backpropagation
-portion of the code worked. It is not my intention to get any credit for the presented code below given it was
-originally devised by Nielsen." - Damião, A.
+portion of the code. I've also removed some of the original methods while adding others to help me with what I needed.
+It is not my intention to get any credit for the presented code below given it was originally devised by Nielsen."
+- Damião, A.
 """
 
 import random
@@ -53,27 +54,21 @@ class Network:
         a = np.dot(self.weights[-1], a) + self.biases[-1]
         return a
 
-    def sgd(self, training_data, epochs, mini_batch_size, eta=0.01, reg_eta=0.1, test_data=None):
+    def sgd(self, training_data, epochs, mini_batch_size, eta=0.01, reg_eta=0.1, verbose=False):
         """Train the neural network using mini-batch stochastic gradient descent. The ``training_data`` is a
         list of tuples ``(x, y)`` representing the training inputs and the desired outputs. The other non-optional
         parameters are self-explanatory.  If ``test_data`` is provided then the network will be evaluated against
         the test data after each epoch, and partial progress printed out. This is useful for tracking progress, but
         slows things down substantially."""
-        if test_data:
-            n_test = len(test_data)
-        else:
-            n_test = None
+
         n = len(training_data)
         for j in range(epochs):
             shuffled_training_data = random.sample(training_data, n)
             mini_batches = [shuffled_training_data[k:k+mini_batch_size] for k in range(0, n, mini_batch_size)]
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta, reg_eta)
-            if j % 50 == 0:
-                if test_data:
-                    print("Epoch {0}: {1} / {2}".format(
-                        j, self.evaluate(test_data), n_test))
-                else:
+            if verbose:
+                if j % 50 == 0:
                     print("Epoch {0} complete".format(j))
 
     def update_mini_batch(self, mini_batch, eta, reg_eta):
@@ -96,9 +91,9 @@ class Network:
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
 
-        # Feedforward (Note that in the we will calculate the outputs prior to "entering" the activation function (z)
-        #  as well as the values being output by the activation function (activation) and put them in their respective
-        #  lists (zs) and (activations).)
+        # Feedforward - Note that in the we will calculate the outputs prior to "entering" the activation function (z)
+        # as well as the values being output by the activation function (activation) and put them in their respective
+        # lists (zs) and (activations)
 
         activation = x
         activations = [x]
@@ -109,9 +104,7 @@ class Network:
             activation = Network.sigmoid(z)
             activations.append(activation)
 
-        # Backward Pass (Note that the numbering of the layers is done backwards to take advantage of the fact
-        # that Python can use negative indices in lists. I have added a regularization parameter during this backward
-        # pass: based on L2-norm of the parameters.)
+        # Backward Pass - I have added a regularization parameter based on L2-norm of the parameters
 
         delta = zs[-1] - y
         nabla_b[-1] = delta - reg_eta*nabla_b[-1]
@@ -124,15 +117,6 @@ class Network:
             nabla_w[-idx] = np.dot(delta, activations[-idx-1].transpose()) - reg_eta*nabla_w[-idx]
 
         return nabla_b, nabla_w
-
-    def evaluate(self, test_data):
-        """Returns the fraction of test inputs that the neural network calculates correctly. Note that the neural
-        network's output is assumed to be the index of whichever neuron in the final layer has the highest activation.
-        Argmax retrieves the label for the one-hot encoding."""
-        size_test_data = len(test_data)
-        test_results = [(np.argmax(self.feedforward(x)), y)
-                        for (x, y) in test_data]
-        return sum(int(x == y) for (x, y) in test_results)/size_test_data
 
     @staticmethod
     def point_predictor(neural_network_list, list_of_gammas, x_input):
