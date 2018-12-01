@@ -25,26 +25,27 @@ epochs = 501
 mini_batch_size = 25
 
 # Initialization of variables
-training_error = training_data.copy()
+training_error = training_data.copy()  # the original error vector will just be the original training data
 prediction_vector, error_vector = np.zeros(y_shape), np.zeros(y_shape)
 neural_bundle = []
 
 # # BOOSTING PROCEDURE
 
+# We loop once for each neural network belonging to the weak learners
 for iteration in range(number_of_networks):
     print()
     print('Training Network {} out of {}'.format(iteration + 1, number_of_networks))
     print()
-    nn = Network(sizes)
-    nn.sgd(training_error, epochs, mini_batch_size, eta=eta, reg_eta=reg_eta)
+    nn = Network(sizes)  # create instance of a neural network object
+    nn.sgd(training_error, epochs, mini_batch_size, eta=eta, reg_eta=reg_eta, verbose=True)  # fit nn w/ training errors
     neural_bundle.append(nn)
 
     # Calculate error vectors
-    training_error = []
+    training_error = []  # create new list of tuples every loop (for each new weak learner)
     for idx, (x, y) in enumerate(training_data):
         prediction_vector = Network.point_predictor(neural_bundle, gammas, x)
         error_vector = y - prediction_vector
-        training_error.append((x, y - prediction_vector))
+        training_error.append((x, y - prediction_vector))  # create new training error vector
 
     # Calculate weak learner coefficient
     gamma_numerator = np.dot(np.transpose(error_vector), prediction_vector)
@@ -54,7 +55,8 @@ for iteration in range(number_of_networks):
 
 ########################################################################################################################
 
-# x_test = np.array([[0.11], [0.51], [0.05], [0.04]])  # output should be 0
+# # TESTING SOME RANDOM SAMPLES
+x_test = np.array([[0.11], [0.51], [0.05], [0.04]])  # output should be 0
 # x_test = np.array([[0.94], [0.26], [0.98], [0.92]])  # output should be 1
-x_test = np.array([[0.39], [0.33], [0.59], [0.51]])  # output should be 2
-print(Network.point_predictor(neural_bundle, gammas, x_test))
+# x_test = np.array([[0.39], [0.33], [0.59], [0.51]])  # output should be 2
+print(np.argmax(Network.point_predictor(neural_bundle, gammas, x_test)))
