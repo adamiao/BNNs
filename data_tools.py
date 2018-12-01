@@ -45,7 +45,9 @@ class MNIST:
         self.imagefile = imagefile
         self.labelfile = labelfile
         self.pickle_filepath = pickle_filepath
-
+		
+		
+	# Code obtained from: https://martin-thoma.com/classify-mnist-with-pybrain/
     def get_labeled_data(self):
         """Read input-vector (image) and target class (label, 0-9) and return
            it as list of tuples.
