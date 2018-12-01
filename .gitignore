@@ -3,6 +3,19 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Pycharm
+.idea/
+
+# Latex
+Report/comments.tex
+Report/results.tex
+Report/conclusion.tex
+Report/appendix.tex
+Report/bibliography.tex
+Report/main_BNN.aux
+Report/main_BNN.log
+Report/main_BNN.synctex.gz
+
 # C extensions
 *.so
 
@@ -80,9 +93,6 @@ celerybeat-schedule
 
 # SageMath parsed files
 *.sage.py
-
-# Pycharm
-.idea/
 
 # Environments
 .env

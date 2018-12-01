@@ -1,0 +1,74 @@
+\documentclass[12pt]{article}
+\usepackage{amsmath}
+\usepackage{relsize}
+\usepackage[makeroom]{cancel}
+\usepackage{amssymb}
+\usepackage{float}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{listings}
+\usepackage{pdfpages}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+%\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{subcaption}
+\usepackage[capitalize]{cleveref}
+\usepackage{fancyhdr}
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+\newcommand{\logo}{\ensuremath{\quad\therefore\quad}}
+\newcommand{\ip}[2]{\ensuremath{\langle#1,#2\rangle}}
+\newcommand{\babs}[1]{\ensuremath{\Big|#1\Big|}}
+\newcommand{\bnorm}[1]{\ensuremath{\Big\|#1\Big\|}}
+\newcommand{\bbnorm}[1]{\ensuremath{\Bigg\|#1\Bigg\|}}
+\newcommand{\bip}[2]{\ensuremath{\Big\langle\;#1\;,\;#2\;\Big\rangle}}
+\newcommand{\bp}[1]{\ensuremath{\Big(#1\Big)}}
+\newcommand{\bbp}[1]{\ensuremath{\Bigg(#1\Bigg)}}
+\newcommand{\bc}[1]{\ensuremath{\Big[#1\Big]}}
+\newcommand{\bbc}[1]{\ensuremath{\Bigg[#1\Bigg]}}
+\newcommand{\bcu}[1]{\ensuremath{\Big\{#1\Big\}}}
+\newcommand{\bbcu}[1]{\ensuremath{\Bigg\{#1\Bigg\}}}
+\newcommand{\pd}[2]{\ensuremath{\frac{\partial #1}{\partial #2}}}
+\newcommand{\pdd}[2]{\ensuremath{\frac{\partial^2 #1}{\partial #2^2}}}
+\newcommand{\canbar}[2]{\ensuremath{\mathbb{R}^{#1,#2}}}
+\newcommand{\canbag}[3]{\ensuremath{\mathbb{G}^{#1}_{#2,#3}}}
+\newcommand{\canbaro}[2]{\ensuremath{\overline{\mathbb{R}}^{\;#1,#2}}}
+\newcommand{\canbago}[3]{\ensuremath{\overline{\mathbb{G}}^{\;#1}_{\;#2,#3}}}
+\newcommand{\blade}[2]{\ensuremath{#1_{\langle#2\rangle}}}
+\newcommand*{\vertbar}{\rule[1ex]{0.5pt}{4.5ex}}
+\newcommand*{\horzbar}{\rule[.5ex]{4.5ex}{0.5pt}}
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+%   THEOREM ENVIRONMENT
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{definition}{Definition}[section]
+\newtheorem{axiom}{Axiom}[section]
+\newtheorem{example}{Example}[section]
+\let\olddefinition\example
+\renewcommand{\example}{\olddefinition\normalfont}
+%\newenvironment{proof}[1][Proof:]{\begin{trivlist}
+%		\item[\hskip \labelsep {\emph{#1}}]}{\end{trivlist}}
+%\newenvironment{definition}[1][Definition:]{\begin{trivlist}
+%		\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+%\newcommand{\qed}{\nobreak \ifvmode \relax \else
+%	\ifdim\lastskip<1.5em \hskip-\lastskip
+%	\hskip1.5em plus0em minus0.5em \fi \nobreak
+%	\vrule height0.75em width0.5em depth0.25em\fi}
+%
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\begin{document}
+	
+\input{title_page}
+%\input{comments}
+\input{introduction}
+\input{computation}
+%\input{results}
+%\input{conclusion}
+%\input{appendix}
+%\input{bibliography}
+
+\end{document}

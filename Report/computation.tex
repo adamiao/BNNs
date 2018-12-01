@@ -1,0 +1,217 @@
+\section*{Computation}
+%\section*{\underline{\textbf{Computation}}}
+
+Suppose we are given a training set $\Omega = \{(x_i, y_i)\}_{i\in I}$ where $x_i\in\mathbb{R}^n$, $y_i\in\mathbb{R}^m$. A cost function $C_L: \Omega\rightarrow\mathbb{R}$ (for a chosen differentiable, convex function $L$), based on the predictor $f:\mathbb{R}^n\rightarrow\mathbb{R}^m$, is given by:\\
+
+\begin{equation}
+C = \sum_{i\in I} L(y_i, f(x_i))\;,\quad\;
+\end{equation}\\
+
+\noindent where:\\
+
+\begin{equation*}
+\begin{aligned}
+L:\mathbb{R}^m\times\mathbb{R}^m&\rightarrow\mathbb{R}\\
+(y, f(x))&\mapsto L(y, f(x))
+\end{aligned}
+\end{equation*}\\
+
+\noindent is a convex function with continuous derivatives. For this report we will be using the well known quadratic form since it simplifies a lot of the calculations:\\
+
+\begin{equation*}
+L(y, f(x))=(y-f(x))^T(y-f(x))\equiv(y-f)^T(y-f)
+\end{equation*}\\
+
+The idea of the method is to keep updating the predictor by means of a weak learner. The weak learner are usually small decision trees (\emph{XGBoost} for example). However, here we will implement a learner based upon neural networks with one hidden layer.\\
+
+Suppose we are at the step $m$ of our iterations. This means that we have determined the predictor $f_{m-1}(x)$ and now we want to calculate $f_{m}(x)$. The final predictor will be of the form:\\
+
+\begin{equation}
+f(x) = \gamma_0f_0(x)+\gamma_1f_1(x) + \dots + \gamma_kf_k(x)
+\end{equation}\\
+
+\noindent where $\gamma_i\in\mathbb{R}$.\\
+
+Let's now describe the method itself. The first step will be to fit a neural net $f_0$ to the training points of $\Omega$. This is done just as one would do for a regular neural network. Once we obtain $f_0$ we will want to determine $\gamma_0$. To do so we must find a quantity $\gamma_0$ such that we minimize the following cost:\\
+
+\begin{equation*}
+\begin{aligned}
+C &= \sum_{i}L(y_i, \gamma_0f_0(x_i))=\sum_{i}(y_i-\gamma_0f_0(x_i))^T(y_i-\gamma_0f_0(x_i))\\ \\
+&=\sum_{i}y_i^Ty_i-2\gamma_0y_i^Tf_0(x_i)+\gamma_0^2f_0(x_i)^Tf_0(x_i)
+\end{aligned}
+\end{equation*}\\
+
+Taking the derivative of the cost function with respect to $\gamma_0$ we obtain:\\
+
+\begin{equation*}
+\frac{dC}{d\gamma_0} = -2\sum_{i}y_i^Tf_0(x_i)+2\gamma_0\sum_{i}f_0(x_i)^Tf_0(x_i)\\
+\end{equation*}\\
+
+\noindent  and by making $dC/d\gamma_0$ equal to zero we determine that:\\
+
+\begin{equation}\label{eq:gamma_0}
+\gamma_0=\frac{\sum_{i}y_i^Tf_0(x_i)}{\sum_{i}f_0(x_i)^Tf_0(x_i)}
+\end{equation}\\
+
+One quick remark: we know that this choice for $\gamma_0$ will minimize the cost function because the second derivative of the cost function with respect to $\gamma_0$ is strictly positive, since we established that $L$ is a convex function. Therefore we know that $\gamma_0$ given by \cref{eq:gamma_0} will minimize the cost function.\\
+
+For the next step we have to increment our current predictor $\gamma_0f_0(x)$ by $h(x)$ in such a way that the cost function $C$ decreases as much as spossible. So consider the following:\\
+
+\begin{equation}
+C = \sum_{i}L(y_i, f_{m-1}(x_i)+h(x_i))
+\end{equation}\\
+
+\noindent where $f_{m-1}$ can be thought of being the most current predictor. Let's expand $L$ in a Taylor series up to second order with respect to the small variations $h(x_i)$:\\
+
+\begin{equation}
+L(y, f+h)\approx L(y,f)+\nabla L^Th+\frac{1}{2}h^T\nabla^2L\,h
+\end{equation}\\
+
+\noindent where:\\
+
+\begin{equation}
+\nabla L=
+\begin{bmatrix}
+\partial_{f_1}L \\
+\partial_{f_2}L \\
+\vdots \\
+\partial_{f_m}L
+\end{bmatrix}\quad\text{and}\quad
+\nabla^2 L=
+\begin{bmatrix}
+\partial^2_{f_1f_1}L&\dots&\partial^2_{f_1f_m}L& \\
+\partial^2_{f_2f_1}L&\dots&\partial^2_{f_2f_m}L& \\
+\vdots&\ddots&\vdots \\
+\partial^2_{f_mf_1}L&\dots&\partial^2_{f_mf_m}L& \\
+\end{bmatrix}
+\end{equation}\\
+
+This yields the following:\\
+
+\begin{equation}
+C = C_{m-1}+\bp{\sum_{i}\nabla L_i^Th_i+\frac{1}{2}h_i^T\nabla^2L_ih_i}
+\end{equation}\\
+
+\noindent where the notation used here is such that $\nabla L_i\equiv\nabla L(y_i,f(x_i))$. It is interesting to note that, by writing $\Delta C = \sum_{i}\nabla L_i^Th_i+\frac{1}{2}h_i^T\nabla^2L_ih_i$ and taking the gradient with respect to $h_i$, we obtain:\\
+
+\begin{equation*}
+\nabla(\Delta C)=\frac{\partial (\Delta C)}{\partial h_i}=\sum_{i}(\nabla L_i+\nabla^2 L_i\,h_i)\\
+\end{equation*}\\
+
+Therefore, by making $\nabla(\Delta C)=0$ we must enforce that $h_i$ be equal to:\\
+
+\begin{equation*}
+-(\nabla^2L_i)^{-1}\nabla L_i
+\end{equation*}\\
+
+Another remark is that, since the laplacian of $C$ with respect to $h_i$ is strictly positive:
+
+\begin{equation*}
+\nabla^2(\Delta C)=\sum_{i}\nabla^2L_i>0
+\end{equation*}\\
+
+\noindent then the choice of $h_i=-(\nabla^2L_i)^{-1}\nabla L_i$ will minimize the cost function $C$. Keep this remark in mind, it is quite important. The increment we will be adding to our predictor will be such that:\\
+
+\begin{equation*}
+h\;\text{maps}\;x_i\;\text{to}\;-(\nabla^2L_i)^{-1}\nabla L_i
+\end{equation*}\\
+
+So we fit a neural net from $x_i$ to $-(\nabla^2L_i)^{-1}\nabla L_i$. For our nice quadratic function $L$ this is the same as:\\
+
+\begin{equation*}
+h\;\text{maps}\;x_i\;\text{to}\;y_i-f_{m-1}(x_i)
+\end{equation*}\\
+
+We finally pick a new constant $\gamma$ which will help adjust this prediction. In other words, we have found the predictor up to step $m-1$. We have to determine the new direction to proceed by fitting our neural network to $(y_i-f_{m-1}(x_i))$.\\
+
+\begin{equation*}
+f_{m-1}(x)=\sum_{i=0}^{m-1}\gamma_ih_i(x)
+\end{equation*}\\
+
+\noindent and the cost function we want to minimize is:\\
+
+\begin{equation*}
+C=\sum_{i}L(y_i,f_{m-1}(x_i)+\gamma_mh(x_i))
+\end{equation*}\\
+
+Taking the derivative with respect to $\gamma_m$ yields the following:\\
+
+\begin{equation*}
+\frac{dC}{d\gamma_m}=-2\sum_{i}\bp{y_i-f_{m-1}(x_i)}^Th(x_i)+2\gamma_m\sum_{i}h^T(x_i)h_(x_i)
+\end{equation*}\\
+
+\noindent which by making it equal to zero gives us:\\
+
+\begin{equation*}
+\gamma_m=\frac{\sum_{i}\bp{y_i-f_{m-1}(x_i)}^Th(x_i)}{\sum_{i}h^T(x_i)h(x_i)}
+\end{equation*}\\
+
+\noindent and we finally update our predictor:\\
+
+\begin{equation*}
+f_m(x)=\gamma_0h_0(x)+\gamma_1h_1(x)+\dots+\gamma_mh_m(x)
+\end{equation*}\\
+
+%-----------------------------------------------------------------------------------------------
+
+\section*{\emph{\textbf{Algorithm - Pseudocode}}}
+
+\makeatletter
+\def\BState{\State\hskip-\ALG@thistlm}
+\makeatother
+
+I've broken down the whole code into two parts: initialization and loop. They are very similar but I thought it was worth having both pieces here just to make sure it is clear. The second part should be repeated until the desired number of weak learners is achieved.\\
+
+\begin{algorithm}
+	\caption{Initialization}\label{algorithm_first}
+	\begin{algorithmic}[1]
+		\State Fit the training data $\Omega$ with a neural network to determine $h_0(x)$.
+		\State Calculate $\Delta_i=y_i-h_0(x_i)$ and determine:
+		\begin{equation*}
+			\gamma_0=\frac{\sum_{i}\Delta_i^Th_0(x_i)}{\sum_{i}h_0^T(x_i)h_0(x_i)}
+		\end{equation*}
+		\State Update the predictor: $f_0(x)=\gamma_0h_0(x)$
+		\State Fit a neural network to the training data $\{(x_i, \Delta_i)\}_{i\in I}$ to determine $h_1(x)$.
+		\State Calculate $\Delta_i=y_i-f_0(x_i)$ and determine:
+		\begin{equation*}
+		\gamma_1=\frac{\sum_{i}\Delta_i^Th_1(x_i)}{\sum_{i}h_1^T(x_i)h_1(x_i)}
+		\end{equation*}
+		\State Update the predictor: $f_1(x)=\gamma_0h_0(x)+\gamma_1h_1(x)$
+	\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+	\caption{Initialization}\label{algorithm_loop}
+	\begin{algorithmic}[1]
+		\State Fit a neural network to the data $\{(x_i, y_i-f_{j-1}(x_i))\}_{i\in I}$ to determine $h_j(x)$.
+		\State Determine:
+		\begin{equation*}
+		\gamma_j=\frac{\sum_{i}\Delta_i^Th_j(x_i)}{\sum_{i}h_j^T(x_i)h_j(x_i)}\quad\text{where}\quad\Delta_i=y_i-f_{j-1}(x_i)
+		\end{equation*}
+		\State Update the predictor: $f_j(x)=\sum_{k=0}^{j}\gamma_kh_k(x)$
+	\end{algorithmic}
+\end{algorithm}
+
+% PSEUDOCODE TEMPLATE
+%\begin{algorithm}
+%	\caption{Loop}\label{algorithm_loop}
+%	\begin{algorithmic}[1]
+%		\Procedure{MyProcedure}{}
+%		\State $\textit{stringlen} \gets \text{length of }\textit{string}$
+%		\State $i \gets \textit{patlen}$
+%		\BState \emph{top}:
+%		\If {$i > \textit{stringlen}$} \Return false
+%		\EndIf
+%		\State $j \gets \textit{patlen}$
+%		\BState \emph{loop}:
+%		\If {$\textit{string}(i) = \textit{path}(j)$}
+%		\State $j \gets j-1$.
+%		\State $i \gets i-1$.
+%		\State \textbf{goto} \emph{loop}.
+%		\State \textbf{close};
+%		\EndIf
+%		\State $i \gets i+\max(\textit{delta}_1(\textit{string}(i)),\textit{delta}_2(j))$.
+%		\State \textbf{goto} \emph{top}.
+%		\EndProcedure
+%	\end{algorithmic}
+%\end{algorithm}
