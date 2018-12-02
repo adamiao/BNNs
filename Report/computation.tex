@@ -1,7 +1,7 @@
 \section*{Computation}
 %\section*{\underline{\textbf{Computation}}}
 
-Suppose we are given a training set $\Omega = \{(x_i, y_i)\}_{i\in I}$ where $x_i\in\mathbb{R}^n$, $y_i\in\mathbb{R}^m$. A cost function $C_L: \Omega\rightarrow\mathbb{R}$ (for a chosen differentiable, convex function $L$), based on the predictor $f:\mathbb{R}^n\rightarrow\mathbb{R}^m$, is given by:\\
+Suppose we are given a training set $\Omega = \{(x_i, y_i)\}_{i\in I}$ where $x_i\in\mathbb{R}^n$, $y_i\in\mathbb{R}^m$. A cost function $C: \Omega\rightarrow\mathbb{R}$ (for a chosen differentiable, convex function $L$), based on the predictor $f:\mathbb{R}^n\rightarrow\mathbb{R}^m$, is given by:\\
 
 \begin{equation}
 C = \sum_{i\in I} L(y_i, f(x_i))\;,\quad\;
@@ -181,7 +181,7 @@ I've broken down the whole code into two parts: initialization and loop. They ar
 \end{algorithm}
 
 \begin{algorithm}
-	\caption{Initialization}\label{algorithm_loop}
+	\caption{}\label{algorithm_loop}
 	\begin{algorithmic}[1]
 		\State Fit a neural network to the data $\{(x_i, y_i-f_{j-1}(x_i))\}_{i\in I}$ to determine $h_j(x)$.
 		\State Determine:
