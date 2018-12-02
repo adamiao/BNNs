@@ -16,13 +16,14 @@ y_shape = (len(training_data), len(training_data[0][1]))
 
 # # PARAMETERS AND VARIABLES
 
-number_of_networks = 3
+number_of_networks = 10
 gammas = [1.0]  # these are the coefficients for the weak learners
-sizes = [4, 2, 3]  # architecture of the neural net: input - hidden layer 1 - ... - output
-eta = 0.01  # learning rate
-reg_eta = 0.1  # regularization parameter
-epochs = 201
-mini_batch_size = 25
+gamma_initial = 1.0  # value of gamma used for fitting neural network to an error vector
+sizes = [4, 20, 3]  # architecture of the neural net: input - hidden layer 1 - ... - output
+eta = 0.005  # learning rate
+reg_eta = 0.001  # regularization parameter
+epochs = 1001
+mini_batch_size = 5
 
 # Initialization of variables
 prediction_vector, error_vector = np.zeros(y_shape), np.zeros(y_shape)
@@ -31,6 +32,7 @@ neural_bundle = []
 # # BOOSTING PROCEDURE
 
 # Algorithm 1: Initialization
+print()
 print('Training Network 1 out of {}'.format(number_of_networks))
 print()
 nn = Network(sizes)  # create instance of a neural network object
@@ -38,15 +40,10 @@ nn.sgd(training_data, epochs, mini_batch_size, eta=eta, reg_eta=reg_eta, verbose
 neural_bundle.append(nn)  # append new trained weak learner to list
 
 training_error = []  # create new list of training errors tuple for every loop (for each new weak learner)
-# gamma_numerator, gamma_denominator = 0.0, 0.0
 for idx, (x, y) in enumerate(training_data):
     prediction_vector = Network.point_predictor(neural_bundle, gammas, x)  # gammas = [1.0] for this initialization
     error_vector = y - prediction_vector  # calculate error vector
     training_error.append((x, y - prediction_vector))  # create new training error vector
-    # gamma_numerator += np.dot(np.transpose(error_vector), prediction_vector)[0][0]
-    # gamma_denominator += np.dot(np.transpose(prediction_vector), prediction_vector)[0][0]
-# gamma = gamma_numerator / gamma_denominator
-# gammas.append(gamma)
 
 # Algorithm 2: We loop once for each neural network belonging to the weak learners
 for iteration in range(number_of_networks-1):
@@ -62,7 +59,7 @@ for iteration in range(number_of_networks-1):
     training_error = []  # create new list of training errors tuple for every loop (for each new weak learner)
     gamma_numerator, gamma_denominator = 0.0, 0.0
     for idx, (x, y) in enumerate(training_error_copy):
-        prediction_vector = Network.point_predictor(neural_bundle, gammas + [1.0], x)
+        prediction_vector = Network.point_predictor(neural_bundle, gammas + [gamma_initial], x)
         error_vector = y - prediction_vector
         training_error.append((x, y - prediction_vector))  # create new training error vector
         gamma_numerator += np.dot(np.transpose(error_vector), prediction_vector)[0][0]
@@ -82,3 +79,5 @@ print()
 print(Network.point_predictor(neural_bundle, gammas, x_test))
 print()
 print(np.argmax(Network.point_predictor(neural_bundle, gammas, x_test)))
+print()
+print('Gammas: {}'.format(gammas))
